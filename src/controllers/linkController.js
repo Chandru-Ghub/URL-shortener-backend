@@ -1,6 +1,7 @@
 import Link from '../models/Link.js';
 import { validateURL } from '../utils/validateURL.js';
 import { generateCode } from '../utils/generateCode.js';
+import { STATUS } from '../constants/statuscode.js';
 
 /**
  * Create a new link
@@ -16,11 +17,11 @@ export const createLink = async (req, res, next) => {
     const { url, code } = req.body;
 
     if (!url) {
-      return res.status(400).json({ error: 'URL is required' });
+      return res.status(STATUS.BAD_REQUEST).json({ error: 'URL is required' });
     }
 
     if (!validateURL(url)) {
-      return res.status(400).json({ error: 'Invalid URL' });
+      return res.status(STATUS.BAD_REQUEST).json({ error: 'Invalid URL' });
     }
 
     let linkCode = code;
@@ -30,13 +31,13 @@ export const createLink = async (req, res, next) => {
       // Validate code format: [A-Za-z0-9]{6,8}
       const codeRegex = /^[A-Za-z0-9]{6,8}$/;
       if (!codeRegex.test(linkCode)) {
-        return res.status(400).json({ error: 'Code must be 6-8 alphanumeric characters' });
+        return res.status(STATUS.BAD_REQUEST).json({ error: 'Code must be 6-8 alphanumeric characters' });
       }
 
       // Check if code already exists
       const existingLink = await Link.findOne({ code: linkCode });
       if (existingLink) {
-        return res.status(409).json({ error: 'Code already exists' });
+        return res.status(STATUS.CONFLICT).json({ error: 'Code already exists' });
       }
     } else {
       // Generate unique code
@@ -60,7 +61,7 @@ export const createLink = async (req, res, next) => {
     // Saved the document inside the collection
     await link.save();
 
-    res.status(201).json(link);
+    res.status(STATUS.CREATED).json(link);
   } catch (error) {
     next(error);
   }
@@ -99,7 +100,7 @@ export const getLink = async (req, res, next) => {
     const link = await Link.findOne({ code });
 
     if (!link) {
-      return res.status(404).json({ error: 'Link not found' });
+      return res.status(STATUS.NOT_FOUND).json({ error: 'Link not found' });
     }
 
     res.json(link);
@@ -123,7 +124,7 @@ export const deleteLink = async (req, res, next) => {
     const link = await Link.findOneAndDelete({ code });
 
     if (!link) {
-      return res.status(404).json({ error: 'Link not found' });
+      return res.status(STATUS.NOT_FOUND).json({ error: 'Link not found' });
     }
 
     res.json({ message: 'Link deleted successfully' });
@@ -147,7 +148,7 @@ export const redirectLink = async (req, res, next) => {
     const link = await Link.findOne({ code });
 
     if (!link) {
-      return res.status(404).json({ error: 'Link not found' });
+      return res.status(STATUS.NOT_FOUND).json({ error: 'Link not found' });
     }
 
     // Increment clicks and update lastClicked
@@ -155,7 +156,7 @@ export const redirectLink = async (req, res, next) => {
     link.lastClicked = new Date();
     await link.save();
 
-    res.status(302).redirect(link.url);
+    res.status(STATUS.REDIRECT).redirect(link.url);
   } catch (error) {
     next(error);
   }

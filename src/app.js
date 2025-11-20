@@ -3,6 +3,7 @@ import cors from 'cors';
 import linksRouter from './routes/links.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { redirectLink } from './controllers/linkController.js';
+import {STATUS} from './constants/statuscode.js'
 
 // initialize express app
 const app = express();
@@ -14,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check
 app.get('/healthz', (req, res) => {
-  res.status(200).json({ status: 'OK' });
+  res.status(STATUS.OK).json({ status: 'OK' });
 });
 
 // API routes
